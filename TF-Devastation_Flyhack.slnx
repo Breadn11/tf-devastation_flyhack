@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="TF-Devastation_Flyhack.vcxproj" />
+  <Project Path="TF-Devastation_Flyhack.vcxproj" Id="2e13b758-babd-4591-9fd3-8ade724c96aa" />
 </Solution>
