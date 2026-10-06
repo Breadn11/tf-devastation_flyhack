@@ -7,7 +7,18 @@ namespace config
 	constexpr const wchar_t* PROCESS_NAME = L"transformersdevastation.exe";
 	const float MOVE_DISTANCE = 1.0f;
 	const int   SLEEP_TIME_S  = 4;
-	const char  KEY_FLY = 'F';
+	const float HALF_PI       = 1.5708f;
+}
+
+namespace key
+{
+	const char TOGGLE  = 'P';
+	const char FORWARD = 'I';
+	const char LEFT    = 'J';
+	const char BACK    = 'K';
+	const char RIGHT   = 'L';
+	const char UP      = 'U';
+	const char DOWN    = 'O';
 }
 
 namespace instr
@@ -22,18 +33,18 @@ namespace offset
 	const DWORD IN_GRAVITY = 0x54136;
 	const DWORD IN_STICK   = 0x54B23;
 	const DWORD PLAYER     = 0xA5CE84;
+	const DWORD PLAYER_X   = 0x50;
+	const DWORD PLAYER_Z   = 0x54;
+	const DWORD PLAYER_Y   = 0x58;
 	const DWORD CAMERA     = 0xB73F68;
+	const DWORD CAM_PITCH  = 0x5E0;
+	const DWORD CAM_YAW    = 0x5E4;
 }
 
 namespace addr
 {
 	DWORD player{};
-	DWORD playerX{};
-	DWORD playerZ{};
-	DWORD playerY{};
 	DWORD camera{};
-	DWORD cameraPitch{};
-	DWORD cameraYaw{};
 }
 
 namespace val
@@ -44,6 +55,9 @@ namespace val
 	float newPlayerX{};
 	float newPlayerZ{};
 	float newPlayerY{};
+	float addPlayerX{};
+	float addPlayerZ{};
+	float addPlayerY{};
 	float cameraPitch{};
 	float cameraYaw{};
 }
@@ -60,6 +74,18 @@ namespace state
 	bool isFlyToggled{};
 	bool isKeyDown_Fly{};
 	bool wasKeyDown_Fly{};
+	bool hasUpdated{};
+
+	enum Direction
+	{
+		Forward,
+		Left,
+		Back,
+		Right,
+		Up,
+		Down,
+	};
+	Direction direction;
 }
 
 template <typename T>
@@ -97,9 +123,30 @@ void ToggleFly()
 	}
 }
 
+void UpdateAddVector()
+{
+	if (state::hasUpdated == false)
+	{
+		val::addPlayerX, val::addPlayerZ, val::addPlayerY = 0;
+		MemRead(proc::addrBase + offset::CAMERA, &addr::camera);
+		MemRead(addr::camera + offset::CAM_PITCH, &val::cameraPitch);
+		MemRead(addr::camera + offset::CAM_YAW, &val::cameraYaw);
+		val::cameraYaw += config::HALF_PI;
+	}
+	
+	if (state::direction == state::Forward)
+	{
+		val::addPlayerX = (std::cos(val::cameraPitch) * std::cos(val::cameraYaw)) * config::MOVE_DISTANCE;
+		val::addPlayerZ = std::sin(val::cameraPitch) * config::MOVE_DISTANCE;
+		val::addPlayerY = ((std::cos(val::cameraPitch) * std::sin(val::cameraYaw)) * config::MOVE_DISTANCE) * -1;
+	}
+
+	state::hasUpdated = true;
+}
+
 void MainLoop()
 {
-	state::isKeyDown_Fly = GetAsyncKeyState(config::KEY_FLY);
+	state::isKeyDown_Fly = GetAsyncKeyState(key::TOGGLE);
 
 	if (state::isKeyDown_Fly && !state::wasKeyDown_Fly)
 	{
@@ -108,6 +155,31 @@ void MainLoop()
 	}
 	
 	state::wasKeyDown_Fly = state::isKeyDown_Fly;
+
+
+	state::hasUpdated = false;
+
+	if (GetAsyncKeyState(key::FORWARD))
+	{
+		state::direction = state::Forward;
+		UpdateAddVector();
+	}
+
+	if (state::hasUpdated == true)
+	{
+		MemRead(proc::addrBase + offset::PLAYER, &addr::player);
+		MemRead(addr::player + offset::PLAYER_X, &val::playerX);
+		MemRead(addr::player + offset::PLAYER_Z, &val::playerZ);
+		MemRead(addr::player + offset::PLAYER_Y, &val::playerY);
+		
+		val::newPlayerX = val::playerX + val::addPlayerX;
+		val::newPlayerZ = val::playerZ + val::addPlayerZ;
+		val::newPlayerY = val::playerY + val::addPlayerY;
+
+		MemWrite(addr::player + offset::PLAYER_X, &val::newPlayerX);
+		MemWrite(addr::player + offset::PLAYER_Z, &val::newPlayerZ);
+		MemWrite(addr::player + offset::PLAYER_Y, &val::newPlayerY);
+	}
 }
 
 int main()
