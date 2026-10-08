@@ -6,7 +6,7 @@ namespace config
 {
 	constexpr const wchar_t* PROCESS_NAME = L"transformersdevastation.exe";
 	const float MOVE_DISTANCE = 1.0f;
-	const int   SLEEP_TIME_S  = 4;
+	const int   SLEEP_TIME_MS = 4;
 	const float HALF_PI       = 1.5707963f;
 }
 
@@ -236,6 +236,6 @@ int main()
 	while (true)
 	{
 		MainLoop();
-		Sleep(config::SLEEP_TIME_S);
+		Sleep(config::SLEEP_TIME_MS);
 	}
 }
