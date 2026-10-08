@@ -7,7 +7,7 @@ namespace config
 	constexpr const wchar_t* PROCESS_NAME = L"transformersdevastation.exe";
 	const float MOVE_DISTANCE = 1.0f;
 	const int   SLEEP_TIME_S  = 4;
-	const float HALF_PI       = 1.5708f;
+	const float HALF_PI       = 1.5707963f;
 }
 
 namespace key
@@ -127,18 +127,35 @@ void UpdateAddVector()
 {
 	if (state::hasUpdated == false)
 	{
-		val::addPlayerX, val::addPlayerZ, val::addPlayerY = 0;
+		val::addPlayerX = 0;
+		val::addPlayerY = 0;
+		val::addPlayerZ = 0;
 		MemRead(proc::addrBase + offset::CAMERA, &addr::camera);
 		MemRead(addr::camera + offset::CAM_PITCH, &val::cameraPitch);
 		MemRead(addr::camera + offset::CAM_YAW, &val::cameraYaw);
-		val::cameraYaw += config::HALF_PI;
 	}
 	
 	if (state::direction == state::Forward)
 	{
-		val::addPlayerX = (std::cos(val::cameraPitch) * std::cos(val::cameraYaw)) * config::MOVE_DISTANCE;
+		val::addPlayerX = (std::cos(val::cameraPitch) * std::cos(val::cameraYaw + config::HALF_PI)) * config::MOVE_DISTANCE;
 		val::addPlayerZ = std::sin(val::cameraPitch) * config::MOVE_DISTANCE;
-		val::addPlayerY = ((std::cos(val::cameraPitch) * std::sin(val::cameraYaw)) * config::MOVE_DISTANCE) * -1;
+		val::addPlayerY = ((std::cos(val::cameraPitch) * std::sin(val::cameraYaw + config::HALF_PI)) * config::MOVE_DISTANCE) * -1;
+	}
+	if (state::direction == state::Back)
+	{
+		val::addPlayerX = ((std::cos(val::cameraPitch) * std::cos(val::cameraYaw + config::HALF_PI)) * config::MOVE_DISTANCE) * -1;
+		val::addPlayerZ = (std::sin(val::cameraPitch) * config::MOVE_DISTANCE) * -1;
+		val::addPlayerY = (std::cos(val::cameraPitch) * std::sin(val::cameraYaw + config::HALF_PI)) * config::MOVE_DISTANCE;
+	}
+	if (state::direction == state::Left)
+	{
+		val::addPlayerX = std::cos(val::cameraYaw) * config::MOVE_DISTANCE * -1;
+		val::addPlayerY = std::sin(val::cameraYaw) * std::cos(val::cameraPitch) * config::MOVE_DISTANCE;
+	}
+	if (state::direction == state::Right)
+	{
+		val::addPlayerX = std::cos(val::cameraYaw) * config::MOVE_DISTANCE;
+		val::addPlayerY = std::sin(val::cameraYaw) * std::cos(val::cameraPitch) * config::MOVE_DISTANCE * -1;
 	}
 
 	state::hasUpdated = true;
@@ -156,12 +173,26 @@ void MainLoop()
 	
 	state::wasKeyDown_Fly = state::isKeyDown_Fly;
 
-
 	state::hasUpdated = false;
 
 	if (GetAsyncKeyState(key::FORWARD))
 	{
 		state::direction = state::Forward;
+		UpdateAddVector();
+	}
+	if (GetAsyncKeyState(key::BACK))
+	{
+		state::direction = state::Back;
+		UpdateAddVector();
+	}
+	if (GetAsyncKeyState(key::LEFT))
+	{
+		state::direction = state::Left;
+		UpdateAddVector();
+	}
+	if (GetAsyncKeyState(key::RIGHT))
+	{
+		state::direction = state::Right;
 		UpdateAddVector();
 	}
 
