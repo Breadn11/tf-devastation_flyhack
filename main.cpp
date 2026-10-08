@@ -137,25 +137,33 @@ void UpdateAddVector()
 	
 	if (state::direction == state::Forward)
 	{
-		val::addPlayerX = (std::cos(val::cameraPitch) * std::cos(val::cameraYaw + config::HALF_PI)) * config::MOVE_DISTANCE;
-		val::addPlayerZ = std::sin(val::cameraPitch) * config::MOVE_DISTANCE;
-		val::addPlayerY = ((std::cos(val::cameraPitch) * std::sin(val::cameraYaw + config::HALF_PI)) * config::MOVE_DISTANCE) * -1;
+		val::addPlayerX += (std::cos(val::cameraPitch) * std::cos(val::cameraYaw + config::HALF_PI)) * config::MOVE_DISTANCE;
+		val::addPlayerZ += std::sin(val::cameraPitch) * config::MOVE_DISTANCE;
+		val::addPlayerY += ((std::cos(val::cameraPitch) * std::sin(val::cameraYaw + config::HALF_PI)) * config::MOVE_DISTANCE) * -1;
 	}
 	if (state::direction == state::Back)
 	{
-		val::addPlayerX = ((std::cos(val::cameraPitch) * std::cos(val::cameraYaw + config::HALF_PI)) * config::MOVE_DISTANCE) * -1;
-		val::addPlayerZ = (std::sin(val::cameraPitch) * config::MOVE_DISTANCE) * -1;
-		val::addPlayerY = (std::cos(val::cameraPitch) * std::sin(val::cameraYaw + config::HALF_PI)) * config::MOVE_DISTANCE;
+		val::addPlayerX += ((std::cos(val::cameraPitch) * std::cos(val::cameraYaw + config::HALF_PI)) * config::MOVE_DISTANCE) * -1;
+		val::addPlayerZ += (std::sin(val::cameraPitch) * config::MOVE_DISTANCE) * -1;
+		val::addPlayerY += (std::cos(val::cameraPitch) * std::sin(val::cameraYaw + config::HALF_PI)) * config::MOVE_DISTANCE;
 	}
 	if (state::direction == state::Left)
 	{
-		val::addPlayerX = std::cos(val::cameraYaw) * config::MOVE_DISTANCE * -1;
-		val::addPlayerY = std::sin(val::cameraYaw) * std::cos(val::cameraPitch) * config::MOVE_DISTANCE;
+		val::addPlayerX += std::cos(val::cameraYaw) * config::MOVE_DISTANCE * -1;
+		val::addPlayerY += std::sin(val::cameraYaw) * std::cos(val::cameraPitch) * config::MOVE_DISTANCE;
 	}
 	if (state::direction == state::Right)
 	{
-		val::addPlayerX = std::cos(val::cameraYaw) * config::MOVE_DISTANCE;
-		val::addPlayerY = std::sin(val::cameraYaw) * std::cos(val::cameraPitch) * config::MOVE_DISTANCE * -1;
+		val::addPlayerX += std::cos(val::cameraYaw) * config::MOVE_DISTANCE;
+		val::addPlayerY += std::sin(val::cameraYaw) * std::cos(val::cameraPitch) * config::MOVE_DISTANCE * -1;
+	}
+	if (state::direction == state::Up)
+	{
+		val::addPlayerZ += config::MOVE_DISTANCE;
+	}
+	if (state::direction == state::Down)
+	{
+		val::addPlayerZ += config::MOVE_DISTANCE * -1;
 	}
 
 	state::hasUpdated = true;
@@ -195,6 +203,16 @@ void MainLoop()
 		state::direction = state::Right;
 		UpdateAddVector();
 	}
+	if (GetAsyncKeyState(key::UP))
+	{
+		state::direction = state::Up;
+		UpdateAddVector();
+	}
+	if (GetAsyncKeyState(key::DOWN))
+	{
+		state::direction = state::Down;
+		UpdateAddVector();
+	}
 
 	if (state::hasUpdated == true)
 	{
@@ -218,7 +236,6 @@ int main()
 	while (true)
 	{
 		MainLoop();
-		
 		Sleep(config::SLEEP_TIME_S);
 	}
 }
