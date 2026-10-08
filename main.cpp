@@ -130,6 +130,7 @@ void UpdateAddVector()
 		val::addPlayerX = 0;
 		val::addPlayerY = 0;
 		val::addPlayerZ = 0;
+		ResolveProcessDetails();
 		MemRead(proc::addrBase + offset::CAMERA, &addr::camera);
 		MemRead(addr::camera + offset::CAM_PITCH, &val::cameraPitch);
 		MemRead(addr::camera + offset::CAM_YAW, &val::cameraYaw);
